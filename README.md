@@ -20,7 +20,7 @@ This lab started from a school exercise (one Cisco 2901 router, one Cisco 2960 s
 
 ```
                        +--------------------------------------+
-                       |  Router Cisco 2901 (R-GROUP1)        |
+                       |  Router Cisco 2901 (R-01)            |
                        |  Gi0/0 (no IP)                       |
                        |   +-- Gi0/0.10  10.110.1.1/26        |  VLAN 10 Office
                        |   +-- Gi0/0.20  10.110.1.65/26       |  VLAN 20 Technical
@@ -31,7 +31,7 @@ This lab started from a school exercise (one Cisco 2901 router, one Cisco 2960 s
                                           |  802.1Q trunk (switch Gi0/1)
                                           |
                        +------------------+-------------------+
-                       |  Switch Cisco 2960 (SW-GROUP1)       |
+                       |  Switch Cisco 2960 (SW-01)           |
                        |  Management IP 10.110.1.66 (VLAN 20) |
                        +---+------------+-----------+---------+---------+
                            |            |           |                   |
