@@ -1,0 +1,100 @@
+!
+version 15.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname R-01
+!
+!
+!
+!
+!
+!
+!
+!
+ip cef
+no ipv6 cef
+!
+!
+!
+!
+license udi pid CISCO2901/K9 sn FTX1524YBQ0-
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ no ip address
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/0.10
+ encapsulation dot1Q 10
+ ip address 10.110.1.1 255.255.255.192
+ ip helper-address 10.110.1.194
+!
+interface GigabitEthernet0/0.20
+ encapsulation dot1Q 20
+ ip address 10.110.1.65 255.255.255.192
+ ip helper-address 10.110.1.194
+!
+interface GigabitEthernet0/0.30
+ encapsulation dot1Q 30
+ ip address 10.110.1.129 255.255.255.192
+ ip helper-address 10.110.1.194
+ ip access-group ACL_GUEST_ISOLATION in
+!
+interface GigabitEthernet0/0.40
+ encapsulation dot1Q 40
+ ip address 10.110.1.193 255.255.255.192
+!
+interface GigabitEthernet0/1
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+ip access-list extended ACL_GUEST_ISOLATION
+ deny ip 10.110.1.128 0.0.0.63 10.110.1.0 0.0.0.63
+ deny ip 10.110.1.128 0.0.0.63 10.110.1.64 0.0.0.63
+ deny ip 10.110.1.128 0.0.0.63 10.110.1.192 0.0.0.63
+ permit ip any any
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end
