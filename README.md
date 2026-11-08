@@ -48,14 +48,14 @@ This lab started from a school exercise (one Cisco 2901 router, one Cisco 2960 s
 |--------|------|------|-------------|------------|
 | R-01 | Router 2901 | all | Gi0/1 (trunk) | see subinterfaces |
 | SW-01 | Switch 2960 | 20 (management) | - | 10.110.1.66 (static) |
-| PC1 | PC | 10 | Fa0/2 | 10.110.1.10 (static) |
+| PC1 | PC | 10 | Fa0/2 | DHCP |
 | PC4 | PC | 10 | Fa0/3 | DHCP |
 | PC5 | PC | 10 | Fa0/4 | DHCP |
 | PRINTER-OFFICE | Printer | 10 | Fa0/5 | 10.110.1.5 (static) |
-| PC2 | PC | 20 | Fa0/12 | 10.110.1.70 (static) |
+| PC2 | PC | 20 | Fa0/12 | DHCP |
 | PC6 | PC | 20 | Fa0/13 | DHCP |
 | PC7 | PC | 20 | Fa0/14 | DHCP |
-| PC3 | PC | 30 | Fa0/16 | 10.110.1.135 (static) |
+| PC3 | PC | 30 | Fa0/16 | DHCP |
 | PC8 | PC (guest) | 30 | Fa0/17 | DHCP |
 | SRV-DHCP-DNS | Server | 40 | Fa0/21 | 10.110.1.194 (static) |
 | SRV-WEB | Server | 40 | Fa0/22 | 10.110.1.195 (static) |
@@ -65,12 +65,14 @@ This lab started from a school exercise (one Cisco 2901 router, one Cisco 2960 s
 
 Every subnet uses the mask 255.255.255.192. The four /26 blocks all come from the same 10.110.1.0/24 network.
 
-| VLAN | Name | Subnet | Gateway (router) | Static range | DHCP range |
+| VLAN | Name | Subnet | Gateway (router) | Reserved (static) | DHCP range |
 |------|------|--------|------------------|--------------|------------|
 | 10 | OFFICE | 10.110.1.0/26 | 10.110.1.1 | .2 - .19 | .20 - .49 |
 | 20 | TECHNICAL | 10.110.1.64/26 | 10.110.1.65 | .67 - .79 (switch: .66) | .80 - .109 |
 | 30 | GUESTS | 10.110.1.128/26 | 10.110.1.129 | .130 - .139 | .140 - .169 |
 | 40 | SERVERS | 10.110.1.192/26 | 10.110.1.193 | .194 - .254 | none |
+
+Static addresses are only used for infrastructure (switch, printer, servers). Every user PC gets its address from DHCP.
 
 ## Step-by-Step Build
 
@@ -78,10 +80,10 @@ Every subnet uses the mask 255.255.255.192. The four /26 blocks all come from th
 2. Configure the switch: VLANs, management IP, access ports, trunk.
 3. Configure the router: physical interface, subinterfaces, DHCP relay, ACL.
 4. Configure the servers: static IP, DHCP pools, DNS records, web and file services.
-5. Configure the clients: static for PC1/PC2/PC3, DHCP for the others.
+5. Set every PC to DHCP and check the leases.
 6. Run the tests and save the configurations.
 
-## Switch Configuration (SW-GROUP1)
+## Switch Configuration (SW-01)
 
 ```
 enable
@@ -160,7 +162,7 @@ show interfaces trunk
 show ip interface brief
 ```
 
-## Router Configuration (R-GROUP1)
+## Router Configuration (R-01)
 
 ```
 enable
@@ -262,34 +264,29 @@ Static IP: 10.110.1.196, mask 255.255.255.192, gateway 10.110.1.193, DNS 10.110.
 
 ## Client Configuration
 
+All user PCs use DHCP. Only the switch, the printer and the servers have static addresses.
+
 ### In Packet Tracer
 
-- PC1, PC2, PC3: Desktop > IP Configuration > Static, with the values from the device table, the /26 mask, and the gateway of their VLAN.
-- Other PCs: Desktop > IP Configuration > DHCP.
+On every PC: Desktop > IP Configuration > DHCP.
 
 ### On real hardware (Kubuntu, with `nmcli`)
 
-Replace `eno1` with the name of the local network interface, and adapt the IP address to the machine (PC1 / PC2 / PC3).
+Replace `eno1` with the name of the local network interface.
 
 ```bash
-# Create a dedicated static profile, without touching the original DHCP profile
-nmcli connection add type ethernet ifname eno1 con-name BAIE ipv4.method manual ipv4.addresses 10.110.1.10/26 ipv4.gateway 10.110.1.1 ipv6.method disabled connection.autoconnect no
+# Create a dedicated DHCP profile for the lab network
+nmcli connection add type ethernet ifname eno1 con-name BAIE ipv4.method auto ipv6.method disabled connection.autoconnect no
 
 # Activate the profile
 nmcli connection up BAIE
 ```
 
-| Machine | Address | Gateway |
-|---------|---------|---------|
-| PC1 | 10.110.1.10/26 | 10.110.1.1 |
-| PC2 | 10.110.1.70/26 | 10.110.1.65 |
-| PC3 | 10.110.1.135/26 | 10.110.1.129 |
-
 ## Tests and Expected Results
 
 | Test | Expected result |
 |------|-----------------|
-| PC4 / PC6 / PC8 request an address (`ipconfig`) | 10.110.1.20+ / 10.110.1.80+ / 10.110.1.140+ |
+| Every PC requests an address (`ipconfig`) | Office PCs 10.110.1.20+, technical PCs 10.110.1.80+, guest PCs 10.110.1.140+ |
 | PC1 -> PC2 (`ping`) | Success (inter-VLAN routing) |
 | PC1 -> PRINTER-OFFICE 10.110.1.5 | Success (same VLAN) |
 | PC4 -> http://web.company.local (browser) | Web page loads (DNS + HTTP) |
@@ -300,6 +297,8 @@ nmcli connection up BAIE
 | PC3 / PC8 -> switch 10.110.1.66 | Blocked by the ACL |
 | PC3 / PC8 -> own gateway 10.110.1.129 | Success |
 | PC1 -> PC3 (`ping`) | Blocked (the reply is filtered on the way back) |
+
+For the ping tests, use the address each PC received (`ipconfig`).
 
 ## Screenshots
 
@@ -336,7 +335,9 @@ nmcli connection up BAIE
 ## Notes and Known Issues
 
 - The first pings may fail right after opening the file: ARP needs a moment to resolve.
-- DHCP replies can take a few seconds in Packet Tracer.
+- DHCP replies can take a few seconds in Packet Tracer; renew the lease if needed.
+- The original school lab ran on physical equipment with Kubuntu clients; this version adds the server VLAN, the extra machines and DHCP/DNS in Packet Tracer.
+- Add anything else you notice here.
 
 ## What I Learned
 
