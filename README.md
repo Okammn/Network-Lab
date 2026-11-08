@@ -46,8 +46,8 @@ This lab started from a school exercise (one Cisco 2901 router, one Cisco 2960 s
 
 | Device | Type | VLAN | Switch port | IP address |
 |--------|------|------|-------------|------------|
-| R-GROUP1 | Router 2901 | all | Gi0/1 (trunk) | see subinterfaces |
-| SW-GROUP1 | Switch 2960 | 20 (management) | - | 10.110.1.66 (static) |
+| R-01 | Router 2901 | all | Gi0/1 (trunk) | see subinterfaces |
+| SW-01 | Switch 2960 | 20 (management) | - | 10.110.1.66 (static) |
 | PC1 | PC | 10 | Fa0/2 | 10.110.1.10 (static) |
 | PC4 | PC | 10 | Fa0/3 | DHCP |
 | PC5 | PC | 10 | Fa0/4 | DHCP |
@@ -86,7 +86,7 @@ Every subnet uses the mask 255.255.255.192. The four /26 blocks all come from th
 ```
 enable
 configure terminal
-hostname SW-GROUP1
+hostname SW-01
 
 ! Create the VLANs
 vlan 10
@@ -165,7 +165,7 @@ show ip interface brief
 ```
 enable
 configure terminal
-hostname R-GROUP1
+hostname R-01
 
 ! Physical interface: on, without IP address
 interface gigabitEthernet 0/0
@@ -336,9 +336,7 @@ nmcli connection up BAIE
 ## Notes and Known Issues
 
 - The first pings may fail right after opening the file: ARP needs a moment to resolve.
-- DHCP replies can take a few seconds in Packet Tracer; renew the lease if needed.
-- The original school lab ran on physical equipment with Kubuntu clients; this version adds the server VLAN, the extra machines and DHCP/DNS in Packet Tracer.
-- Add anything else you notice here.
+- DHCP replies can take a few seconds in Packet Tracer.
 
 ## What I Learned
 
