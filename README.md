@@ -37,9 +37,9 @@ This lab started from a school exercise (one Cisco 2901 router, one Cisco 2960 s
                            |            |           |                   |
                       Fa0/1-10     Fa0/11-15    Fa0/16-20           Fa0/21-24
                       VLAN 10      VLAN 20      VLAN 30             VLAN 40
-                      PC1 PC4 PC5  PC2 PC6 PC7  PC3 PC8             SRV-DHCP-DNS
-                      Printer                                       SRV-WEB
-                                                                    SRV-FILE
+                      PC01 PC04    PC02 PC06    PC03 PC08           SRV-DHCP-DNS
+                      PC05 Printer PC07                             SRV-WEB
+                                                                    SRV-FILES
 ```
 
 ## Devices
@@ -48,18 +48,18 @@ This lab started from a school exercise (one Cisco 2901 router, one Cisco 2960 s
 |--------|------|------|-------------|------------|
 | R-01 | Router 2901 | all | Gi0/1 (trunk) | see subinterfaces |
 | SW-01 | Switch 2960 | 20 (management) | - | 10.110.1.66 (static) |
-| PC1 | PC | 10 | Fa0/2 | DHCP |
-| PC4 | PC | 10 | Fa0/3 | DHCP |
-| PC5 | PC | 10 | Fa0/4 | DHCP |
+| PC01 | PC | 10 | Fa0/2 | DHCP |
+| PC04 | PC | 10 | Fa0/3 | DHCP |
+| PC05 | PC | 10 | Fa0/4 | DHCP |
 | PRINTER-OFFICE | Printer | 10 | Fa0/5 | 10.110.1.5 (static) |
-| PC2 | PC | 20 | Fa0/12 | DHCP |
-| PC6 | PC | 20 | Fa0/13 | DHCP |
-| PC7 | PC | 20 | Fa0/14 | DHCP |
-| PC3 | PC | 30 | Fa0/16 | DHCP |
-| PC8 | PC (guest) | 30 | Fa0/17 | DHCP |
+| PC02 | PC | 20 | Fa0/12 | DHCP |
+| PC06 | PC | 20 | Fa0/13 | DHCP |
+| PC07 | PC | 20 | Fa0/14 | DHCP |
+| PC03 | PC | 30 | Fa0/16 | DHCP |
+| PC08 | PC (guest) | 30 | Fa0/17 | DHCP |
 | SRV-DHCP-DNS | Server | 40 | Fa0/21 | 10.110.1.194 (static) |
 | SRV-WEB | Server | 40 | Fa0/22 | 10.110.1.195 (static) |
-| SRV-FILE | Server | 40 | Fa0/23 | 10.110.1.196 (static) |
+| SRV-FILES | Server | 40 | Fa0/23 | 10.110.1.196 (static) |
 
 ## IP Addressing Plan (/26)
 
@@ -258,7 +258,7 @@ DNS service:
 
 Static IP: 10.110.1.195, mask 255.255.255.192, gateway 10.110.1.193, DNS 10.110.1.194. HTTP service enabled.
 
-### SRV-FILE (10.110.1.196)
+### SRV-FILES (10.110.1.196)
 
 Static IP: 10.110.1.196, mask 255.255.255.192, gateway 10.110.1.193, DNS 10.110.1.194. FTP service enabled.
 
@@ -287,39 +287,56 @@ nmcli connection up BAIE
 | Test | Expected result |
 |------|-----------------|
 | Every PC requests an address (`ipconfig`) | Office PCs 10.110.1.20+, technical PCs 10.110.1.80+, guest PCs 10.110.1.140+ |
-| PC1 -> PC2 (`ping`) | Success (inter-VLAN routing) |
-| PC1 -> PRINTER-OFFICE 10.110.1.5 | Success (same VLAN) |
-| PC4 -> http://web.company.local (browser) | Web page loads (DNS + HTTP) |
-| PC2 -> files.company.local (FTP) | Connection succeeds |
-| PC2 -> switch 10.110.1.66 | Success |
-| PC3 / PC8 -> PC1 or PC2 (`ping`) | Blocked by the ACL |
-| PC3 / PC8 -> servers (`ping`) | Blocked by the ACL |
-| PC3 / PC8 -> switch 10.110.1.66 | Blocked by the ACL |
-| PC3 / PC8 -> own gateway 10.110.1.129 | Success |
-| PC1 -> PC3 (`ping`) | Blocked (the reply is filtered on the way back) |
+| PC01 -> PC02 (`ping`) | Success (inter-VLAN routing) |
+| PC01 -> PRINTER-OFFICE 10.110.1.5 | Success (same VLAN) |
+| PC04 -> http://web.company.local (browser) | Web page loads (DNS + HTTP) |
+| PC02 -> files.company.local (FTP) | Connection succeeds |
+| PC02 -> switch 10.110.1.66 | Success |
+| PC03 / PC08 -> PC01 or PC02 (`ping`) | Blocked by the ACL |
+| PC03 / PC08 -> servers (`ping`) | Blocked by the ACL |
+| PC03 / PC08 -> switch 10.110.1.66 | Blocked by the ACL |
+| PC03 / PC08 -> own gateway 10.110.1.129 | Success |
+| PC01 -> PC03 (`ping`) | Blocked (the reply is filtered on the way back) |
 
 For the ping tests, use the address each PC received (`ipconfig`).
 
 ## Screenshots
 
-| Topology | Successful ping | Blocked ping (ACL) | DHCP lease |
-|----------|-----------------|--------------------|------------|
-| ![](images/topology.png) | ![](images/ping-ok.png) | ![](images/ping-blocked.png) | ![](images/dhcp.png) |
+### Inter-VLAN routing
+
+PC01 (office VLAN) reaches PC02 (technical VLAN) through the router.
+
+![PC01 to PC02](images/ping_pc01_to_pc02.png)
+
+### Guest isolation (ACL)
+
+A guest PC cannot reach the office VLAN, and the ACL on R-01 holds the rules that block it.
+
+![Guests to office, blocked](images/ping_guests_to_office.png)
+
+![ACL on R-01](images/r01_ACL.png)
+
+### Internal web server
+
+Access to the internal web server from a client.
+
+![Internal web access](images/access_local_web.png)
 
 ## Repository Structure
 
 ```
 .
 ├── README.md
-├── network.pkt            # Packet Tracer file
+├── network.pkt                  # Packet Tracer file
 ├── configs/
-│   ├── SW-GROUP1.txt      # switch running-config
-│   └── R-GROUP1.txt       # router running-config
+│   ├── R-01.txt                 # router running-config
+│   └── SW-01.txt                # switch running-config
 └── images/
     ├── topology.png
-    ├── ping-ok.png
-    ├── ping-blocked.png
-    └── dhcp.png
+    ├── ping_pc01_to_pc02.png
+    ├── ping_guests_to_office.png
+    ├── r01_ACL.png
+    └── access_local_web.png
 ```
 
 ## Skills Demonstrated
