@@ -2,7 +2,7 @@
 
 VLANs, 802.1Q trunk, router-on-a-stick, centralized DHCP/DNS/Web/File servers and a guest isolation ACL.
 
-This lab started from a school exercise (one Cisco 2901 router, one Cisco 2960 switch, three Kubuntu clients). It is rebuilt and extended in Packet Tracer with more machines and a dedicated server VLAN so that it looks like a small company network.
+This lab is designed and implemented in Packet Tracer with multiple machines and a dedicated server VLAN to simulate a realistic small company network environment.
 
 ## Objectives
 
